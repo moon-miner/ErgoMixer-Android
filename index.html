@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ErgoMixer — Android Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0c0c0c;
+  --card:     #111411;
+  --card2:    #161a16;
+  --border:   #1f261f;
+  --border2:  #273027;
+  --orange:   #ff5c1a;
+  --orange2:  #ff8c5a;
+  --green:    #3ecf6e;
+  --green2:   #6ddf96;
+  --green-dim:#25894a;
+  --text:     #e8ede8;
+  --text2:    #8ca08c;
+  --muted:    #4a5e4a;
+  --sans:     'Space Grotesk', sans-serif;
+  --mono:     'Space Mono', monospace;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.7;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Glow blobs */
+body::before {
+  content:'';
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(ellipse 65% 50% at -8% 0%,   rgba(62,207,110,.11) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 108% 100%, rgba(255,92,26,.09)  0%, transparent 55%);
+}
+
+/* Very subtle dot grid */
+body::after {
+  content:'';
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image: radial-gradient(circle, rgba(62,207,110,.07) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* ── LANG BAR ──────────────────────────────── */
+.lang-bar {
+  position:fixed; top:0; left:0; right:0; z-index:200;
+  background:rgba(12,12,12,.93);
+  backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  flex-wrap:wrap; gap:5px; padding:10px 16px;
+}
+.lang-btn {
+  background:transparent;
+  border:1px solid var(--border2);
+  border-radius:6px;
+  color:var(--muted);
+  font-family:var(--mono); font-size:10px; font-weight:700;
+  letter-spacing:.06em;
+  padding:5px 11px; cursor:pointer;
+  transition:all .15s;
+}
+.lang-btn:hover { border-color:var(--orange); color:var(--orange); }
+.lang-btn.active {
+  background:var(--orange); border-color:var(--orange);
+  color:#fff; 
+}
+
+/* ── LAYOUT ──────────────────────────────── */
+.wrap {
+  position:relative; z-index:1;
+  max-width:800px; margin:0 auto;
+  padding:0 22px 120px;
+}
+
+/* ── HEADER ──────────────────────────────── */
+header { padding:100px 0 60px; text-align:center; }
+
+.eyebrow {
+  display:inline-flex; align-items:center; gap:9px;
+  background:var(--card2); border:1px solid var(--border2);
+  border-radius:100px; padding:7px 20px; margin-bottom:32px;
+  font-family:var(--mono); font-size:10px; font-weight:700;
+  color:var(--orange); letter-spacing:.15em; text-transform:uppercase;
+}
+.dot {
+  width:7px; height:7px; background:var(--orange); border-radius:50%;
+  box-shadow:0 0 10px var(--orange);
+  animation:blink 2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+h1 {
+  font-size: clamp(44px, 9vw, 80px);
+  font-weight:700; line-height:1.0;
+  letter-spacing:-.03em; margin-bottom:22px;
+}
+.h1-ergo   { color:var(--text); }
+.h1-mixer  { color:var(--orange); }
+.h1-on     { color:var(--text2); font-size:.65em; }
+.h1-android{ color:var(--green); }
+
+.subtitle {
+  color:var(--text2); font-size:17px;
+  max-width:440px; margin:0 auto; line-height:1.65;
+}
+
+/* ── SECTION HEAD ──────────────────────────────── */
+.section-head {
+  display:flex; align-items:center; gap:14px;
+  margin:56px 0 20px;
+}
+.section-head::after {
+  content:''; flex:1; height:1px;
+  background:linear-gradient(90deg, var(--border2) 0%, transparent 100%);
+}
+.snum {
+  width:32px; height:32px; flex-shrink:0;
+  background:var(--orange);
+  border-radius:9px;
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--mono); font-size:13px; font-weight:700;
+  color:#fff;
+  box-shadow:0 0 18px rgba(255,92,26,.35);
+}
+.stitle {
+  font-family:var(--mono); font-size:11px; font-weight:700;
+  color:var(--muted); letter-spacing:.14em; text-transform:uppercase;
+  white-space:nowrap;
+}
+
+/* ── CARDS ──────────────────────────────── */
+.card {
+  background:var(--card);
+  border:1px solid var(--border2);
+  border-radius:16px; padding:22px 26px; margin-bottom:12px;
+  transition:border-color .2s, box-shadow .2s;
+  position:relative; overflow:hidden;
+}
+.card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg, transparent, rgba(62,207,110,.12), transparent);
+}
+.card:hover {
+  border-color:rgba(62,207,110,.2);
+  box-shadow:0 4px 28px rgba(0,0,0,.4);
+}
+.card-title {
+  font-size:16px; font-weight:700; margin-bottom:10px;
+  display:flex; align-items:center; gap:10px; color:var(--text);
+}
+.card-body {
+  color:var(--text2); font-size:15px; line-height:1.72;
+}
+.card-body strong { color:var(--text); }
+.card-body code {
+  font-family:var(--mono); font-size:12.5px;
+  background:var(--card2); border:1px solid var(--border2);
+  border-radius:4px; padding:1px 7px; color:var(--green);
+}
+.card-body a {
+  color:var(--green2); text-decoration:none;
+  border-bottom:1px solid rgba(109,223,150,.25);
+  transition:border-color .15s;
+}
+.card-body a:hover { border-color:var(--green2); }
+
+/* ── NOTICES ──────────────────────────────── */
+.notice {
+  display:flex; gap:13px; align-items:flex-start;
+  border-radius:12px; padding:15px 18px; margin:13px 0;
+}
+.notice-warn {
+  background:rgba(255,92,26,.07);
+  border:1px solid rgba(255,92,26,.2);
+}
+.notice-good {
+  background:rgba(62,207,110,.06);
+  border:1px solid rgba(62,207,110,.18);
+}
+.notice-icon { font-size:17px; flex-shrink:0; margin-top:2px; }
+.notice-text { font-size:14px; color:var(--text2); line-height:1.6; }
+.notice-text strong { color:var(--text); }
+
+/* ── INSTALL BOX ──────────────────────────────── */
+.install-box {
+  background:#080a08;
+  border:2px solid rgba(62,207,110,.35);
+  border-radius:16px; padding:26px;
+  margin:18px 0; position:relative;
+  box-shadow:0 0 40px rgba(62,207,110,.07);
+}
+.install-label {
+  position:absolute; top:-12px; left:20px;
+  background:var(--green); color:#051009;
+  font-family:var(--mono); font-size:10px; font-weight:700;
+  letter-spacing:.12em; padding:3px 14px; border-radius:100px;
+}
+.install-box pre {
+  font-family:var(--mono); font-size:13px; color:var(--green);
+  white-space:pre-wrap; word-break:break-all; padding:0; line-height:1.7;
+}
+.install-copy {
+  width:100%; margin-top:16px; padding:13px;
+  background:var(--green); border:none; border-radius:10px;
+  color:#051009; font-family:var(--mono); font-size:13px; font-weight:700;
+  cursor:pointer; transition:all .15s; letter-spacing:.04em;
+}
+.install-copy:hover { background:var(--green2); transform:translateY(-1px); }
+.install-copy.ok { background:#16a34a; color:#fff; }
+
+/* ── CODE BLOCKS ──────────────────────────────── */
+.code-wrap {
+  background:#080a08;
+  border:1px solid var(--border2);
+  border-radius:13px; margin:14px 0; overflow:hidden;
+}
+.code-top {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 14px; border-bottom:1px solid var(--border);
+  background:var(--card2);
+}
+.code-lang {
+  font-family:var(--mono); font-size:10px; font-weight:700;
+  color:var(--muted); letter-spacing:.12em; text-transform:uppercase;
+}
+.copy-btn {
+  background:transparent; border:1px solid var(--border2);
+  border-radius:5px; padding:3px 10px;
+  color:var(--muted); font-family:var(--mono); font-size:10px;
+  cursor:pointer; transition:all .15s;
+}
+.copy-btn:hover { background:var(--orange); border-color:var(--orange); color:#fff; }
+.copy-btn.ok    { background:var(--green);  border-color:var(--green);  color:#051009; }
+pre {
+  padding:18px; font-family:var(--mono); font-size:13px;
+  line-height:1.85; color:#7aaa85; overflow-x:auto;
+}
+.cmd { color:var(--green); }
+.cmt { color:var(--muted); font-style:italic; }
+
+/* ── STEPS ──────────────────────────────── */
+.step-list { display:flex; flex-direction:column; gap:10px; margin:16px 0; }
+.step { display:flex; gap:14px; align-items:flex-start; }
+.step-n {
+  width:32px; height:32px; flex-shrink:0;
+  background:var(--card2); border:1px solid var(--border2);
+  border-radius:8px; display:flex; align-items:center; justify-content:center;
+  font-family:var(--mono); font-size:12px; font-weight:700;
+  color:var(--orange); margin-top:3px;
+}
+.step-content { font-size:15px; color:var(--text2); line-height:1.65; }
+.step-content strong { color:var(--text); }
+
+/* ── SUMMARY ──────────────────────────────── */
+.summary {
+  background:linear-gradient(135deg, rgba(62,207,110,.07) 0%, rgba(255,92,26,.05) 100%);
+  border:1px solid rgba(62,207,110,.15);
+  border-radius:20px; padding:40px 36px;
+  margin-top:56px; text-align:center;
+}
+.summary h2 {
+  font-size:30px; font-weight:700;
+  letter-spacing:-.02em; margin-bottom:8px;
+}
+.summary h2 em { font-style:normal; color:var(--green); }
+.summary > p { color:var(--text2); font-size:15px; margin-bottom:28px; }
+.summary-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(145px,1fr));
+  gap:10px; text-align:left;
+}
+.sg-item {
+  background:var(--card); border:1px solid var(--border2);
+  border-radius:12px; padding:14px 16px;
+}
+.sg-label {
+  font-family:var(--mono); font-size:10px; font-weight:700;
+  color:var(--muted); letter-spacing:.1em; text-transform:uppercase;
+  margin-bottom:5px;
+}
+.sg-val { font-family:var(--mono); font-size:13px; color:var(--orange); }
+
+/* ── FOOTER ──────────────────────────────── */
+footer {
+  text-align:center; padding:40px 0 0;
+  border-top:1px solid var(--border);
+  margin-top:56px; color:var(--muted); font-size:13px;
+}
+footer a { color:var(--muted); text-decoration:none; }
+footer a:hover { color:var(--text2); }
+
+/* ── LANG VISIBILITY ──────────────────────────────── */
+.lang-section { display:none; }
+.lang-section.active { display:block; }
+
+@media(max-width:600px){
+  .card { padding:18px 16px; }
+  .install-box { padding:20px 16px; }
+  pre { font-size:12px; }
+  .summary { padding:26px 18px; }
+}
+</style>
+</head>
+<body>
+
+<div class="lang-bar">
+  <button class="lang-btn active" onclick="setLang('en',this)">🇬🇧 EN</button>
+  <button class="lang-btn" onclick="setLang('es',this)">🇪🇸 ES</button>
+  <button class="lang-btn" onclick="setLang('pt',this)">🇧🇷 PT</button>
+  <button class="lang-btn" onclick="setLang('de',this)">🇩🇪 DE</button>
+  <button class="lang-btn" onclick="setLang('fr',this)">🇫🇷 FR</button>
+  <button class="lang-btn" onclick="setLang('it',this)">🇮🇹 IT</button>
+  <button class="lang-btn" onclick="setLang('zh',this)">🇨🇳 中文</button>
+  <button class="lang-btn" onclick="setLang('ru',this)">🇷🇺 RU</button>
+</div>
+
+<div class="wrap">
+
+<!-- ══════════ ENGLISH ══════════ -->
+<div class="lang-section active" id="lang-en">
+<header>
+  <div class="eyebrow"><span class="dot"></span>ErgoMixer &middot; Android &middot; Setup Guide</div>
+  <h1>
+    <span class="h1-ergo">Ergo</span><span class="h1-mixer">Mixer</span><br>
+    <span class="h1-on">on your</span> <span class="h1-android">Android</span>
+  </h1>
+  <p class="subtitle">Run the mixer natively on your phone using Termux. No root, no server, no custodian.</p>
+</header>
+
+<div class="section-head"><div class="snum">1</div><div class="stitle">Install Termux</div></div>
+<div class="card">
+  <div class="card-title">📦 Get Termux — Play Store or F-Droid</div>
+  <div class="card-body">
+    Install <strong>Termux</strong> from the <a href="https://play.google.com/store/apps/details?id=com.termux" target="_blank">Google Play Store</a> or from <a href="https://f-droid.org/packages/com.termux/" target="_blank">F-Droid</a>. Both versions work. Open Termux once before continuing.
+  </div>
+</div>
+<div class="notice notice-good">
+  <div class="notice-icon">✅</div>
+  <div class="notice-text"><strong>Play Store version works fine.</strong> Tested and fully functional. F-Droid is an alternative for advanced users.</div>
+</div>
+
+<div class="section-head"><div class="snum">2</div><div class="stitle">Run the Installer</div></div>
+<div class="card">
+  <div class="card-title">⚡ One command — installs everything automatically</div>
+  <div class="card-body">Open Termux and paste the command below. It will install Java, download ErgoMixer, and set everything up.</div>
+</div>
+<div class="install-box">
+  <span class="install-label">PASTE IN TERMUX</span>
+  <pre id="cmd-en">curl -fsSL https://raw.githubusercontent.com/moon-miner/ErgoMixer-Android/refs/heads/main/install.sh | bash</pre>
+  <button class="install-copy" onclick="copyInstall('cmd-en',this)">📋 Copy command</button>
+</div>
+<div class="card">
+  <div class="card-title">💬 About the installer questions</div>
+  <div class="card-body">
+    The installer has interactive prompts, but when run via <code>curl | bash</code> (piped), they are skipped automatically with safe defaults — so you won't see them. Everything installs with no input needed.<br><br>
+    The <strong>autostart</strong> option defaults to <strong>No</strong>. The <strong>"Start now"</strong> option also defaults to <strong>No</strong>. The <code>mixer</code> alias is always installed regardless.
+  </div>
+</div>
+
+<div class="section-head"><div class="snum">3</div><div class="stitle">Enable Desktop Mode</div></div>
+<div class="card">
+  <div class="card-title">🖥️ Important: switch your browser to Desktop mode</div>
+  <div class="card-body">ErgoMixer's interface is built for desktop browsers. On mobile you <strong>must</strong> enable Desktop mode or the layout will be broken.</div>
+</div>
+<div class="step-list">
+  <div class="step"><div class="step-n">1</div><div class="step-content">Open your browser menu (<strong>⋮</strong> three dots, top right)</div></div>
+  <div class="step"><div class="step-n">2</div><div class="step-content">Tap <strong>"Desktop site"</strong> or <strong>"Request desktop site"</strong></div></div>
+  <div class="step"><div class="step-n">3</div><div class="step-content">The page reloads and displays correctly</div></div>
+</div>
+<div class="notice notice-warn">
+  <div class="notice-icon">⚠️</div>
+  <div class="notice-text"><strong>Without desktop mode</strong> the interface appears deformed and unusable. This is the most common issue first-time users face.</div>
+</div>
+
+<div class="section-head"><div class="snum">4</div><div class="stitle">Start the Mixer</div></div>
+<div class="card">
+  <div class="card-title">🚀 After install — start anytime</div>
+  <div class="card-body">Open Termux and type <code>mixer</code>. The browser opens automatically once the server is ready, going directly to the Active Mixes page.</div>
+</div>
+<div class="code-wrap">
+  <div class="code-top"><span class="code-lang">termux</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+  <pre><span class="cmd">mixer</span></pre>
+</div>
+
+<div class="section-head"><div class="snum">5</div><div class="stitle">Stop the Mixer</div></div>
+<div class="card">
+  <div class="card-title">🛑 Three ways to stop</div>
+  <div class="card-body">
+    <strong>Option A — Web UI (recommended):</strong> Open the side menu (<strong>☰</strong> top right) → scroll to the bottom → tap <strong>Shutdown</strong>. Cleanest method.<br><br>
+    <strong>Option B — Termux:</strong> Press <strong>Ctrl+C</strong> in the mixer session.<br><br>
+    <strong>Option C — Any session:</strong>
+  </div>
+</div>
+<div class="code-wrap">
+  <div class="code-top"><span class="code-lang">termux</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+  <pre><span class="cmd">mixer stop</span>      <span class="cmt"># stop via saved PID</span>
+<span class="cmd">kill &lt;PID&gt;</span>      <span class="cmt"># PID shown at startup</span>
+<span class="cmd">kill -9 &lt;PID&gt;</span>   <span class="cmt"># force kill if nothing else works</span></pre>
+</div>
+<div class="notice notice-good">
+  <div class="notice-icon">💡</div>
+  <div class="notice-text">
+    While the mixer is running, the current Termux session is occupied by the <code>wait</code> process — you <strong>cannot type commands there</strong>, but <strong>Ctrl+C still works</strong> to interrupt it.
+    Open a <strong>new Termux session</strong> (swipe from the left edge → tap <strong>+</strong>).
+    In that new session, you can type commands like <code>mixer stop</code> or <code>kill &lt;PID&gt;</code> to control or stop the mixer.
+  </div>
+</div>
+
+<div class="section-head"><div class="snum">6</div><div class="stitle">Backup Your Keys</div></div>
+<div class="card">
+  <div class="card-title">🔐 Don't skip this — your funds depend on it</div>
+  <div class="card-body">
+    Go to <strong>Configuration</strong> (side menu) → tap <strong>Backup Database</strong> → a <code>.zip</code> file is downloaded. Store it somewhere safe.<br><br>
+    Also export your Covert Address secret keys via <strong>Configuration → Export</strong>.<br><br>
+    <strong>When to back up:</strong> create a mix → the system generates new secret keys → <strong>back up immediately</strong> → then send funds. Each time you create new mixes with new covert addresses, make a fresh backup. Backups are cumulative — a newer one replaces an older one.<br><br>
+    <strong>If you lose the database, you lose your funds.</strong> Do not run two ErgoMixer instances with the same database.
+  </div>
+</div>
+<div class="notice notice-warn">
+  <div class="notice-icon">⚠️</div>
+  <div class="notice-text"><strong>Back up before running mixes.</strong> The backup contains your mixing secrets and covert address keys — treat it like a wallet seed phrase.</div>
+</div>
+
+<div class="section-head"><div class="snum">7</div><div class="stitle">Tips &amp; Reference</div></div>
+<div class="card">
+  <div class="card-title">📋 Quick reference</div>
+  <div class="card-body">
+    <strong>Mixer URL:</strong> <code>http://localhost:9000/dashboard/mix/active</code><br>
+    <strong>View logs:</strong> <code>tail -f ~/ergoMixer/mixer.log</code><br>
+    <strong>Database:</strong> <code>~/ergoMixer/*.db</code><br>
+    <strong>Install as app:</strong> your browser may offer to install ErgoMixer as a PWA — tap Install for a home screen icon.
+  </div>
+</div>
+<div class="card">
+  <div class="card-title">🔗 Nodes connect automatically</div>
+  <div class="card-body">ErgoMixer connects to public Ergo nodes on its own. In Configuration you'll see green ✓ marks when nodes are reachable. No setup needed.</div>
+</div>
+
+<div class="summary">
+  <h2>Ready to <em>mix.</em></h2>
+  <p>Fully local. No server. No custodian. Your keys, your funds.</p>
+  <div class="summary-grid">
+    <div class="sg-item"><div class="sg-label">Start</div><div class="sg-val">mixer</div></div>
+    <div class="sg-item"><div class="sg-label">Stop</div><div class="sg-val">Shutdown (web)</div></div>
+    <div class="sg-item"><div class="sg-label">URL</div><div class="sg-val">localhost:9000</div></div>
+    <div class="sg-item"><div class="sg-label">Root needed</div><div class="sg-val">No ✗</div></div>
+  </div>
+</div>
+</div><!-- /en -->
+
+<!-- ══════════ ESPAÑOL ══════════ -->
+<div class="lang-section" id="lang-es">
+<header>
+  <div class="eyebrow"><span class="dot"></span>ErgoMixer &middot; Android &middot; Guía de Instalación</div>
+  <h1>
+    <span class="h1-ergo">Ergo</span><span class="h1-mixer">Mixer</span><br>
+    <span class="h1-on">en tu</span> <span class="h1-android">Android</span>
+  </h1>
+  <p class="subtitle">Corré el mixer nativamente en tu teléfono usando Termux. Sin root, sin servidores, sin custodia.</p>
+</header>
+
+<div class="section-head"><div class="snum">1</div><div class="stitle">Instalar Termux</div></div>
+<div class="card">
+  <div class="card-title">📦 Termux desde Play Store o F-Droid</div>
+  <div class="card-body">Instalá <strong>Termux</strong> desde la <a href="https://play.google.com/store/apps/details?id=com.termux" target="_blank">Google Play Store</a> o desde <a href="https://f-droid.org/packages/com.termux/" target="_blank">F-Droid</a>. Ambas versiones funcionan. Abrí Termux una vez antes de continuar.</div>
+</div>
+<div class="notice notice-good">
+  <div class="notice-icon">✅</div>
+  <div class="notice-text"><strong>La versión de Play Store funciona perfectamente.</strong> Probada y completamente funcional. F-Droid es una alternativa para usuarios avanzados.</div>
+</div>
+
+<div class="section-head"><div class="snum">2</div><div class="stitle">Ejecutar el Instalador</div></div>
+<div class="card">
+  <div class="card-title">⚡ Un solo comando — instala todo automáticamente</div>
+  <div class="card-body">Abrí Termux y pegá el siguiente comando. Va a instalar Java, descargar ErgoMixer y configurar todo.</div>
+</div>
+<div class="install-box">
+  <span class="install-label">PEGÁ EN TERMUX</span>
+  <pre id="cmd-es">curl -fsSL https://raw.githubusercontent.com/moon-miner/ErgoMixer-Android/refs/heads/main/install.sh | bash</pre>
+  <button class="install-copy" onclick="copyInstall('cmd-es',this)">📋 Copiar comando</button>
+</div>
+<div class="card">
+  <div class="card-title">💬 Sobre las preguntas del instalador</div>
+  <div class="card-body">
+    El instalador tiene preguntas interactivas, pero cuando se ejecuta con <code>curl | bash</code> (pipe), se saltan automáticamente con los valores predeterminados — no vas a ver nada, todo se instala sin necesidad de escribir nada.<br><br>
+    El <strong>autostart</strong> queda en <strong>No</strong> por defecto. El <strong>"arrancar ahora"</strong> también en <strong>No</strong>. El alias <code>mixer</code> siempre se instala sin importar nada.
+  </div>
+</div>
+
+<div class="section-head"><div class="snum">3</div><div class="stitle">Activar Modo Escritorio</div></div>
+<div class="card">
+  <div class="card-title">🖥️ Importante: activar sitio de escritorio en el navegador</div>
+  <div class="card-body">La interfaz de ErgoMixer está diseñada para desktop. En el navegador del teléfono <strong>es obligatorio</strong> activar el modo escritorio, si no la interfaz se ve deforme e inutilizable.</div>
+</div>
+<div class="step-list">
+  <div class="step"><div class="step-n">1</div><div class="step-content">Abrí el menú del navegador (<strong>⋮</strong> tres puntos, arriba a la derecha)</div></div>
+  <div class="step"><div class="step-n">2</div><div class="step-content">Tocá <strong>"Sitio de escritorio"</strong> o <strong>"Solicitar sitio de escritorio"</strong></div></div>
+  <div class="step"><div class="step-n">3</div><div class="step-content">La página se recarga y se ve correctamente</div></div>
+</div>
+<div class="notice notice-warn">
+  <div class="notice-icon">⚠️</div>
+  <div class="notice-text"><strong>Sin el modo escritorio</strong> la interfaz se ve deforme. Es el problema más común entre usuarios nuevos.</div>
+</div>
+
+<div class="section-head"><div class="snum">4</div><div class="stitle">Iniciar el Mixer</div></div>
+<div class="card">
+  <div class="card-title">🚀 Después de la instalación — iniciá cuando quieras</div>
+  <div class="card-body">Abrí Termux y escribí <code>mixer</code>. El browser se abre automáticamente cuando el servidor está listo, directo en la página de Mezclas Activas.</div>
+</div>
+<div class="code-wrap">
+  <div class="code-top"><span class="code-lang">termux</span><button class="copy-btn" onclick="copyCode(this)">copiar</button></div>
+  <pre><span class="cmd">mixer</span></pre>
+</div>
+
+<div class="section-head"><div class="snum">5</div><div class="stitle">Detener el Mixer</div></div>
+<div class="card">
+  <div class="card-title">🛑 Tres formas de detenerlo</div>
+  <div class="card-body">
+    <strong>Opción A — Desde la web (recomendado):</strong> Abrí el menú lateral (<strong>☰</strong> arriba a la derecha) → bajá hasta el final → tocá <strong>Shutdown</strong>. La forma más limpia.<br><br>
+    <strong>Opción B — En Termux:</strong> Presioná <strong>Ctrl+C</strong> en la sesión donde corre el mixer.<br><br>
+    <strong>Opción C — Desde cualquier sesión:</strong>
+  </div>
+</div>
+<div class="code-wrap">
+  <div class="code-top"><span class="code-lang">termux</span><button class="copy-btn" onclick="copyCode(this)">copiar</button></div>
+  <pre><span class="cmd">mixer stop</span>      <span class="cmt"># detiene por PID guardado</span>
+<span class="cmd">kill &lt;PID&gt;</span>      <span class="cmt"># PID mostrado al iniciar</span>
+<span class="cmd">kill -9 &lt;PID&gt;</span>   <span class="cmt"># fuerza el cierre si nada más funciona</span></pre>
+</div>
+<div class="notice notice-good">
+  <div class="notice-icon">💡</div>
+  <div class="notice-text">
+    Mientras el mixer está corriendo, la sesión actual de Termux queda ocupada por el proceso <code>wait</code> y <strong>no podés escribir comandos ahí</strong>, pero <strong>Ctrl+C sí funciona</strong> para interrumpirlo.
+    Abrí una <strong>nueva sesión de Termux</strong> (deslizá desde el borde izquierdo → tocá <strong>+</strong>).
+    En esa sesión nueva podés escribir comandos como <code>mixer stop</code> o <code>kill &lt;PID&gt;</code> para controlar o detener el mixer.
+  </div>
+</div>
+
+<div class="section-head"><div class="snum">6</div><div class="stitle">Backup de tus Claves</div></div>
+<div class="card">
+  <div class="card-title">🔐 No te lo saltes — tus fondos dependen de esto</div>
+  <div class="card-body">
+    Andá a <strong>Configuración</strong> (menú lateral) → tocá <strong>Backup Database</strong> → se descarga un archivo <code>.zip</code>. Guardalo en un lugar seguro.<br><br>
+    También exportá las claves privadas de tus Covert Addresses desde <strong>Configuración → Export</strong>.<br><br>
+    <strong>Cuándo hacer backup:</strong> creás la mezcla → el sistema genera las claves secretas → <strong>backup inmediatamente</strong> → recién ahí mandás fondos. Cada vez que creás nuevas mezclas con nuevas covert addresses, hacé un backup nuevo. Los backups son acumulativos — uno nuevo reemplaza al anterior.<br><br>
+    <strong>Si perdés la base de datos, perdés tus fondos.</strong> No corras dos instancias de ErgoMixer con la misma base de datos.
+  </div>
+</div>
+<div class="notice notice-warn">
+  <div class="notice-icon">⚠️</div>
+  <div class="notice-text"><strong>Hacé backup antes de iniciar mezclas.</strong> El backup contiene tus claves secretas — tratalo como la seed de una wallet.</div>
+</div>
+
+<div class="section-head"><div class="snum">7</div><div class="stitle">Referencia Rápida</div></div>
+<div class="card">
+  <div class="card-title">📋 Comandos y rutas</div>
+  <div class="card-body">
+    <strong>URL del mixer:</strong> <code>http://localhost:9000/dashboard/mix/active</code><br>
+    <strong>Ver logs:</strong> <code>tail -f ~/ergoMixer/mixer.log</code><br>
+    <strong>Base de datos:</strong> <code>~/ergoMixer/*.db</code><br>
+    <strong>Instalar como app:</strong> el browser puede ofrecer instalar ErgoMixer como PWA — tocá Instalar para tener un ícono en la pantalla de inicio.
+  </div>
+</div>
+<div class="card">
+  <div class="card-title">🔗 Los nodos se conectan automáticamente</div>
+  <div class="card-body">ErgoMixer se conecta a nodos públicos de Ergo sin configuración. En Configuración vas a ver ✓ verdes cuando los nodos están disponibles.</div>
+</div>
+
+<div class="summary">
+  <h2>Listo para <em>mezclar.</em></h2>
+  <p>100% local. Sin servidores. Sin custodios. Tus claves, tus fondos.</p>
+  <div class="summary-grid">
+    <div class="sg-item"><div class="sg-label">Iniciar</div><div class="sg-val">mixer</div></div>
+    <div class="sg-item"><div class="sg-label">Detener</div><div class="sg-val">Shutdown (web)</div></div>
+    <div class="sg-item"><div class="sg-label">URL</div><div class="sg-val">localhost:9000</div></div>
+    <div class="sg-item"><div class="sg-label">Root necesario</div><div class="sg-val">No ✗</div></div>
+  </div>
+</div>
+</div><!-- /es -->
+
+<!-- ══════════ PORTUGUÊS ══════════ -->
+<div class="lang-section" id="lang-pt">
+<header>
+  <div class="eyebrow"><span class="dot"></span>ErgoMixer &middot; Android &middot; Guia de Instalação</div>
+  <h1><span class="h1-ergo">Ergo</span><span class="h1-mixer">Mixer</span><br><span class="h1-on">no seu</span> <span class="h1-android">Android</span></h1>
+  <p class="subtitle">Execute o mixer nativamente no seu telefone via Termux. Sem root, sem servidor, sem custódia.</p>
+</header>
+<div class="section-head"><div class="snum">1</div><div class="stitle">Instalar o Termux</div></div>
+<div class="card"><div class="card-title">📦 Termux da Play Store ou F-Droid</div>
+<div class="card-body">Instale o <strong>Termux</strong> pela <a href="https://play.google.com/store/apps/details?id=com.termux" target="_blank">Google Play Store</a> ou pelo <a href="https://f-droid.org/packages/com.termux/" target="_blank">F-Droid</a>. Ambas funcionam. Abra o Termux uma vez antes de continuar.</div></div>
+<div class="notice notice-good"><div class="notice-icon">✅</div><div class="notice-text"><strong>A versão da Play Store funciona perfeitamente.</strong> Testada e totalmente funcional.</div></div>
+<div class="section-head"><div class="snum">2</div><div class="stitle">Executar o Instalador</div></div>
+<div class="card"><div class="card-title">⚡ Um comando — instala tudo automaticamente</div>
+<div class="card-body">Abra o Termux e cole o comando abaixo:</div></div>
+<div class="install-box"><span class="install-label">COLAR NO TERMUX</span>
+<pre id="cmd-pt">curl -fsSL https://raw.githubusercontent.com/moon-miner/ErgoMixer-Android/refs/heads/main/install.sh | bash</pre>
+<button class="install-copy" onclick="copyInstall('cmd-pt',this)">📋 Copiar comando</button></div>
+<div class="section-head"><div class="snum">3</div><div class="stitle">Ativar Modo Desktop</div></div>
+<div class="card"><div class="card-title">🖥️ Importante: ativar visualização desktop</div>
+<div class="card-body">A interface do ErgoMixer foi feita para desktop. No navegador mobile, ative o <strong>modo desktop</strong> — sem isso a interface fica deformada.</div></div>
+<div class="step-list">
+  <div class="step"><div class="step-n">1</div><div class="step-content">Abra o menu do navegador (<strong>⋮</strong>)</div></div>
+  <div class="step"><div class="step-n">2</div><div class="step-content">Toque em <strong>"Site para computador"</strong></div></div>
+  <div class="step"><div class="step-n">3</div><div class="step-content">A página recarrega e exibe corretamente</div></div>
+</div>
+<div class="notice notice-warn"><div class="notice-icon">⚠️</div><div class="notice-text"><strong>Sem o modo desktop</strong> a interface fica deformada. É o problema mais comum.</div></div>
+<div class="section-head"><div class="snum">4</div><div class="stitle">Iniciar o Mixer</div></div>
+<div class="code-wrap"><div class="code-top"><span class="code-lang">termux</span><button class="copy-btn" onclick="copyCode(this)">copiar</button></div>
+<pre><span class="cmd">mixer</span></pre></div>
+<div class="section-head"><div class="snum">5</div><div class="stitle">Parar o Mixer</div></div>
+<div class="card"><div class="card-title">🛑 Três formas de parar</div>
+<div class="card-body"><strong>A — Interface web:</strong> Menu lateral (☰) → rolar até o fim → tocar <strong>Shutdown</strong>.<br><br>
+<strong>B — Termux:</strong> <strong>Ctrl+C</strong>.<br><br><strong>C — Qualquer sessão:</strong></div></div>
+<div class="code-wrap"><div class="code-top"><span class="code-lang">termux</span><button class="copy-btn" onclick="copyCode(this)">copiar</button></div>
+<pre><span class="cmd">mixer stop</span>
+<span class="cmd">kill &lt;PID&gt;</span>
+<span class="cmd">kill -9 &lt;PID&gt;</span></pre></div>
+<div class="section-head"><div class="snum">6</div><div class="stitle">Backup</div></div>
+<div class="card"><div class="card-title">🔐 Não pule esta etapa</div>
+<div class="card-body"><strong>Configuration</strong> → <strong>Backup Database</strong> → baixa um <code>.zip</code>. Guarde em local seguro. <strong>Sem ele você perde acesso aos fundos.</strong></div></div>
+<div class="summary"><h2>Pronto para <em>misturar.</em></h2>
+<p>100% local. Sem servidor. Suas chaves, seus fundos.</p>
+<div class="summary-grid">
+  <div class="sg-item"><div class="sg-label">Iniciar</div><div class="sg-val">mixer</div></div>
+  <div class="sg-item"><div class="sg-label">Parar</div><div class="sg-val">Shutdown (web)</div></div>
+  <div class="sg-item"><div class="sg-label">URL</div><div class="sg-val">localhost:9000</div></div>
+  <div class="sg-item"><div class="sg-label">Root</div><div class="sg-val">Não ✗</div></div>
+</div></div>
+</div><!-- /pt -->
+
+<!-- ══════════ DEUTSCH ══════════ -->
+<div class="lang-section" id="lang-de">
+<header>
+  <div class="eyebrow"><span class="dot"></span>ErgoMixer &middot; Android &middot; Installationsanleitung</div>
+  <h1><span class="h1-ergo">Ergo</span><span class="h1-mixer">Mixer</span><br><span class="h1-on">auf</span> <span class="h1-android">Android</span></h1>
+  <p class="subtitle">Läuft nativ auf dem Smartphone über Termux. Kein Root, kein Server, keine Verwahrung.</p>
+</header>
+<div class="section-head"><div class="snum">1</div><div class="stitle">Termux installieren</div></div>
+<div class="card"><div class="card-title">📦 Termux aus Play Store oder F-Droid</div>
+<div class="card-body"><strong>Termux</strong> aus dem <a href="https://play.google.com/store/apps/details?id=com.termux" target="_blank">Google Play Store</a> oder von <a href="https://f-droid.org/packages/com.termux/" target="_blank">F-Droid</a> installieren. Beide Versionen funktionieren.</div></div>
+<div class="section-head"><div class="snum">2</div><div class="stitle">Installer ausführen</div></div>
+<div class="install-box"><span class="install-label">IN TERMUX EINFÜGEN</span>
+<pre id="cmd-de">curl -fsSL https://raw.githubusercontent.com/moon-miner/ErgoMixer-Android/refs/heads/main/install.sh | bash</pre>
+<button class="install-copy" onclick="copyInstall('cmd-de',this)">📋 Befehl kopieren</button></div>
+<div class="section-head"><div class="snum">3</div><div class="stitle">Desktop-Modus aktivieren</div></div>
+<div class="card"><div class="card-title">🖥️ Wichtig: Desktop-Ansicht im Browser aktivieren</div>
+<div class="card-body">Das ErgoMixer-Interface ist für Desktop-Browser ausgelegt. Im mobilen Browser muss die <strong>Desktop-Ansicht</strong> aktiviert werden — sonst erscheint die Seite verzerrt.</div></div>
+<div class="step-list">
+  <div class="step"><div class="step-n">1</div><div class="step-content">Browser-Menü öffnen (<strong>⋮</strong>)</div></div>
+  <div class="step"><div class="step-n">2</div><div class="step-content"><strong>"Desktop-Website"</strong> antippen</div></div>
+  <div class="step"><div class="step-n">3</div><div class="step-content">Seite lädt neu und wird korrekt angezeigt</div></div>
+</div>
+<div class="notice notice-warn"><div class="notice-icon">⚠️</div><div class="notice-text"><strong>Ohne Desktop-Modus</strong> ist das Interface nicht nutzbar. Häufigster Fehler bei Erstnutzern.</div></div>
+<div class="section-head"><div class="snum">4</div><div class="stitle">Mixer starten</div></div>
+<div class="code-wrap"><div class="code-top"><span class="code-lang">termux</span><button class="copy-btn" onclick="copyCode(this)">kopieren</button></div>
+<pre><span class="cmd">mixer</span></pre></div>
+<div class="section-head"><div class="snum">5</div><div class="stitle">Mixer stoppen</div></div>
+<div class="card"><div class="card-title">🛑 Stoppen</div>
+<div class="card-body"><strong>A — Web-Interface:</strong> Seitenmenü (☰) → ganz nach unten → <strong>Shutdown</strong>.<br><br>
+<strong>B — Termux:</strong> <strong>Ctrl+C</strong>.<br><br><strong>C — Beliebige Session:</strong></div></div>
+<div class="code-wrap"><div class="code-top"><span class="code-lang">termux</span><button class="copy-btn" onclick="copyCode(this)">kopieren</button></div>
+<pre><span class="cmd">mixer stop</span>
+<span class="cmd">kill &lt;PID&gt;</span>
+<span class="cmd">kill -9 &lt;PID&gt;</span></pre></div>
+<div class="section-head"><div class="snum">6</div><div class="stitle">Backup</div></div>
+<div class="card"><div class="card-title">🔐 Unbedingt durchführen</div>
+<div class="card-body"><strong>Configuration</strong> → <strong>Backup Database</strong> → <code>.zip</code> wird heruntergeladen. Sicher aufbewahren. <strong>Ohne Backup verlierst du den Zugriff auf deine Funds.</strong></div></div>
+<div class="summary"><h2>Bereit zum <em>Mischen.</em></h2>
+<p>100% lokal. Kein Server. Deine Schlüssel, deine Funds.</p>
+<div class="summary-grid">
+  <div class="sg-item"><div class="sg-label">Starten</div><div class="sg-val">mixer</div></div>
+  <div class="sg-item"><div class="sg-label">Stoppen</div><div class="sg-val">Shutdown (Web)</div></div>
+  <div class="sg-item"><div class="sg-label">URL</div><div class="sg-val">localhost:9000</div></div>
+  <div class="sg-item"><div class="sg-label">Root</div><div class="sg-val">Nein ✗</div></div>
+</div></div>
+</div><!-- /de -->
+
+<!-- ══════════ FRANÇAIS ══════════ -->
+<div class="lang-section" id="lang-fr">
+<header>
+  <div class="eyebrow"><span class="dot"></span>ErgoMixer &middot; Android &middot; Guide d'installation</div>
+  <h1><span class="h1-ergo">Ergo</span><span class="h1-mixer">Mixer</span><br><span class="h1-on">sur</span> <span class="h1-android">Android</span></h1>
+  <p class="subtitle">Lancez le mixer nativement sur votre téléphone via Termux. Sans root, sans serveur, sans garde.</p>
+</header>
+<div class="section-head"><div class="snum">1</div><div class="stitle">Installer Termux</div></div>
+<div class="card"><div class="card-title">📦 Termux depuis Play Store ou F-Droid</div>
+<div class="card-body">Installez <strong>Termux</strong> depuis le <a href="https://play.google.com/store/apps/details?id=com.termux" target="_blank">Google Play Store</a> ou depuis <a href="https://f-droid.org/packages/com.termux/" target="_blank">F-Droid</a>. Les deux versions fonctionnent.</div></div>
+<div class="section-head"><div class="snum">2</div><div class="stitle">Lancer l'installateur</div></div>
+<div class="install-box"><span class="install-label">COLLER DANS TERMUX</span>
+<pre id="cmd-fr">curl -fsSL https://raw.githubusercontent.com/moon-miner/ErgoMixer-Android/refs/heads/main/install.sh | bash</pre>
+<button class="install-copy" onclick="copyInstall('cmd-fr',this)">📋 Copier la commande</button></div>
+<div class="section-head"><div class="snum">3</div><div class="stitle">Activer le mode bureau</div></div>
+<div class="card"><div class="card-title">🖥️ Important : activer la vue bureau dans le navigateur</div>
+<div class="card-body">L'interface ErgoMixer est conçue pour desktop. Dans le navigateur mobile, activez le <strong>mode bureau</strong> — sans ça l'affichage est déformé.</div></div>
+<div class="step-list">
+  <div class="step"><div class="step-n">1</div><div class="step-content">Ouvrez le menu du navigateur (<strong>⋮</strong>)</div></div>
+  <div class="step"><div class="step-n">2</div><div class="step-content">Appuyez sur <strong>« Site pour ordinateur »</strong></div></div>
+  <div class="step"><div class="step-n">3</div><div class="step-content">La page se recharge et s'affiche correctement</div></div>
+</div>
+<div class="section-head"><div class="snum">4</div><div class="stitle">Démarrer le mixer</div></div>
+<div class="code-wrap"><div class="code-top"><span class="code-lang">termux</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre><span class="cmd">mixer</span></pre></div>
+<div class="section-head"><div class="snum">5</div><div class="stitle">Arrêter le mixer</div></div>
+<div class="card"><div class="card-title">🛑 Trois façons d'arrêter</div>
+<div class="card-body"><strong>A — Interface web :</strong> Menu latéral (☰) → tout en bas → <strong>Shutdown</strong>.<br><br>
+<strong>B — Termux :</strong> <strong>Ctrl+C</strong>.<br><br><strong>C — N'importe quelle session :</strong></div></div>
+<div class="code-wrap"><div class="code-top"><span class="code-lang">termux</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre><span class="cmd">mixer stop</span>
+<span class="cmd">kill &lt;PID&gt;</span></pre></div>
+<div class="section-head"><div class="snum">6</div><div class="stitle">Sauvegarde</div></div>
+<div class="card"><div class="card-title">🔐 Ne pas ignorer</div>
+<div class="card-body"><strong>Configuration</strong> → <strong>Backup Database</strong> → un fichier <code>.zip</code> est téléchargé. Conservez-le précieusement. <strong>Sans lui, vous perdez l'accès à vos fonds.</strong></div></div>
+<div class="summary"><h2>Prêt à <em>mixer.</em></h2>
+<p>100% local. Pas de serveur. Vos clés, vos fonds.</p>
+<div class="summary-grid">
+  <div class="sg-item"><div class="sg-label">Démarrer</div><div class="sg-val">mixer</div></div>
+  <div class="sg-item"><div class="sg-label">Arrêter</div><div class="sg-val">Shutdown (web)</div></div>
+  <div class="sg-item"><div class="sg-label">URL</div><div class="sg-val">localhost:9000</div></div>
+  <div class="sg-item"><div class="sg-label">Root requis</div><div class="sg-val">Non ✗</div></div>
+</div></div>
+</div><!-- /fr -->
+
+<!-- ══════════ ITALIANO ══════════ -->
+<div class="lang-section" id="lang-it">
+<header>
+  <div class="eyebrow"><span class="dot"></span>ErgoMixer &middot; Android &middot; Guida all'installazione</div>
+  <h1><span class="h1-ergo">Ergo</span><span class="h1-mixer">Mixer</span><br><span class="h1-on">su</span> <span class="h1-android">Android</span></h1>
+  <p class="subtitle">Esegui il mixer nativamente sul tuo telefono via Termux. Senza root, senza server, senza custodia.</p>
+</header>
+<div class="section-head"><div class="snum">1</div><div class="stitle">Installare Termux</div></div>
+<div class="card"><div class="card-title">📦 Termux dal Play Store o F-Droid</div>
+<div class="card-body">Installa <strong>Termux</strong> dal <a href="https://play.google.com/store/apps/details?id=com.termux" target="_blank">Google Play Store</a> o da <a href="https://f-droid.org/packages/com.termux/" target="_blank">F-Droid</a>. Entrambe le versioni funzionano.</div></div>
+<div class="section-head"><div class="snum">2</div><div class="stitle">Eseguire l'installatore</div></div>
+<div class="install-box"><span class="install-label">INCOLLA IN TERMUX</span>
+<pre id="cmd-it">curl -fsSL https://raw.githubusercontent.com/moon-miner/ErgoMixer-Android/refs/heads/main/install.sh | bash</pre>
+<button class="install-copy" onclick="copyInstall('cmd-it',this)">📋 Copia comando</button></div>
+<div class="section-head"><div class="snum">3</div><div class="stitle">Attivare modalità desktop</div></div>
+<div class="card"><div class="card-title">🖥️ Importante: attivare la visualizzazione desktop</div>
+<div class="card-body">L'interfaccia di ErgoMixer è progettata per desktop. Nel browser mobile devi attivare la <strong>modalità desktop</strong> — altrimenti la pagina appare deformata.</div></div>
+<div class="step-list">
+  <div class="step"><div class="step-n">1</div><div class="step-content">Apri il menu del browser (<strong>⋮</strong>)</div></div>
+  <div class="step"><div class="step-n">2</div><div class="step-content">Tocca <strong>"Sito desktop"</strong></div></div>
+  <div class="step"><div class="step-n">3</div><div class="step-content">La pagina si ricarica e appare correttamente</div></div>
+</div>
+<div class="section-head"><div class="snum">4</div><div class="stitle">Avviare il mixer</div></div>
+<div class="code-wrap"><div class="code-top"><span class="code-lang">termux</span><button class="copy-btn" onclick="copyCode(this)">copia</button></div>
+<pre><span class="cmd">mixer</span></pre></div>
+<div class="section-head"><div class="snum">5</div><div class="stitle">Fermare il mixer</div></div>
+<div class="card"><div class="card-title">🛑 Tre modi per fermare</div>
+<div class="card-body"><strong>A — Interfaccia web:</strong> Menu laterale (☰) → scorri in fondo → <strong>Shutdown</strong>.<br><br>
+<strong>B — Termux:</strong> <strong>Ctrl+C</strong>.<br><br><strong>C — Qualsiasi sessione:</strong></div></div>
+<div class="code-wrap"><div class="code-top"><span class="code-lang">termux</span><button class="copy-btn" onclick="copyCode(this)">copia</button></div>
+<pre><span class="cmd">mixer stop</span>
+<span class="cmd">kill &lt;PID&gt;</span>
+<span class="cmd">kill -9 &lt;PID&gt;</span></pre></div>
+<div class="section-head"><div class="snum">6</div><div class="stitle">Backup</div></div>
+<div class="card"><div class="card-title">🔐 Non saltare questo passaggio</div>
+<div class="card-body"><strong>Configuration</strong> → <strong>Backup Database</strong> → viene scaricato un <code>.zip</code>. Conservalo in posto sicuro. <strong>Senza di esso perdi i fondi.</strong></div></div>
+<div class="summary"><h2>Pronto per <em>mixare.</em></h2>
+<p>100% locale. Nessun server. Le tue chiavi, i tuoi fondi.</p>
+<div class="summary-grid">
+  <div class="sg-item"><div class="sg-label">Avvia</div><div class="sg-val">mixer</div></div>
+  <div class="sg-item"><div class="sg-label">Ferma</div><div class="sg-val">Shutdown (web)</div></div>
+  <div class="sg-item"><div class="sg-label">URL</div><div class="sg-val">localhost:9000</div></div>
+  <div class="sg-item"><div class="sg-label">Root</div><div class="sg-val">No ✗</div></div>
+</div></div>
+</div><!-- /it -->
+
+<!-- ══════════ 中文 ══════════ -->
+<div class="lang-section" id="lang-zh">
+<header>
+  <div class="eyebrow"><span class="dot"></span>ErgoMixer &middot; Android &middot; 安装指南</div>
+  <h1><span class="h1-ergo">Ergo</span><span class="h1-mixer">Mixer</span><br><span class="h1-on">运行于</span> <span class="h1-android">Android</span></h1>
+  <p class="subtitle">通过 Termux 在手机上本地运行 ERG 混币器。无需 Root，无服务器，无托管。</p>
+</header>
+<div class="section-head"><div class="snum">1</div><div class="stitle">安装 Termux</div></div>
+<div class="card"><div class="card-title">📦 从 Play Store 或 F-Droid 下载</div>
+<div class="card-body">从 <a href="https://play.google.com/store/apps/details?id=com.termux" target="_blank">Google Play Store</a> 或 <a href="https://f-droid.org/packages/com.termux/" target="_blank">F-Droid</a> 安装 <strong>Termux</strong>。两个版本均可正常使用。安装后先打开一次再继续。</div></div>
+<div class="notice notice-good"><div class="notice-icon">✅</div><div class="notice-text"><strong>Play Store 版本完全可用</strong>，经过测试，功能完整。</div></div>
+<div class="section-head"><div class="snum">2</div><div class="stitle">运行安装脚本</div></div>
+<div class="card"><div class="card-title">⚡ 一条命令 — 自动完成所有安装</div>
+<div class="card-body">打开 Termux，粘贴以下命令：</div></div>
+<div class="install-box"><span class="install-label">粘贴到 TERMUX</span>
+<pre id="cmd-zh">curl -fsSL https://raw.githubusercontent.com/moon-miner/ErgoMixer-Android/refs/heads/main/install.sh | bash</pre>
+<button class="install-copy" onclick="copyInstall('cmd-zh',this)">📋 复制命令</button></div>
+<div class="section-head"><div class="snum">3</div><div class="stitle">启用桌面模式</div></div>
+<div class="card"><div class="card-title">🖥️ 重要：必须启用桌面网站模式</div>
+<div class="card-body">ErgoMixer 界面专为桌面浏览器设计。在手机浏览器中必须启用<strong>桌面模式</strong>，否则界面会变形无法使用。</div></div>
+<div class="step-list">
+  <div class="step"><div class="step-n">1</div><div class="step-content">打开浏览器菜单（<strong>⋮</strong>）</div></div>
+  <div class="step"><div class="step-n">2</div><div class="step-content">点击 <strong>"桌面版网站"</strong></div></div>
+  <div class="step"><div class="step-n">3</div><div class="step-content">页面重新加载后正常显示</div></div>
+</div>
+<div class="notice notice-warn"><div class="notice-icon">⚠️</div><div class="notice-text"><strong>不启用桌面模式</strong>界面将变形无法使用，这是最常见的问题。</div></div>
+<div class="section-head"><div class="snum">4</div><div class="stitle">启动混币器</div></div>
+<div class="code-wrap"><div class="code-top"><span class="code-lang">termux</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+<pre><span class="cmd">mixer</span></pre></div>
+<div class="section-head"><div class="snum">5</div><div class="stitle">停止混币器</div></div>
+<div class="card"><div class="card-title">🛑 三种停止方式</div>
+<div class="card-body"><strong>A — 网页界面：</strong>侧边菜单 (☰) → 滚动到底部 → 点击 <strong>Shutdown</strong>。<br><br>
+<strong>B — Termux：</strong>按 <strong>Ctrl+C</strong>。<br><br><strong>C — 任意会话：</strong></div></div>
+<div class="code-wrap"><div class="code-top"><span class="code-lang">termux</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+<pre><span class="cmd">mixer stop</span>      <span class="cmt"># 通过保存的 PID 停止</span>
+<span class="cmd">kill &lt;PID&gt;</span>      <span class="cmt"># 启动时显示的 PID</span>
+<span class="cmd">kill -9 &lt;PID&gt;</span>   <span class="cmt"># 强制终止</span></pre></div>
+<div class="section-head"><div class="snum">6</div><div class="stitle">备份</div></div>
+<div class="card"><div class="card-title">🔐 请勿跳过</div>
+<div class="card-body">进入 <strong>Configuration</strong> → <strong>Backup Database</strong> → 下载 <code>.zip</code> 文件并妥善保存。<strong>丢失数据库将无法找回资金。</strong></div></div>
+<div class="summary"><h2>准备好<em>混币</em>了。</h2>
+<p>100% 本地运行。无服务器。您的密钥，您的资金。</p>
+<div class="summary-grid">
+  <div class="sg-item"><div class="sg-label">启动</div><div class="sg-val">mixer</div></div>
+  <div class="sg-item"><div class="sg-label">停止</div><div class="sg-val">Shutdown（网页）</div></div>
+  <div class="sg-item"><div class="sg-label">网址</div><div class="sg-val">localhost:9000</div></div>
+  <div class="sg-item"><div class="sg-label">需要 Root</div><div class="sg-val">否 ✗</div></div>
+</div></div>
+</div><!-- /zh -->
+
+<!-- ══════════ РУССКИЙ ══════════ -->
+<div class="lang-section" id="lang-ru">
+<header>
+  <div class="eyebrow"><span class="dot"></span>ErgoMixer &middot; Android &middot; Руководство</div>
+  <h1><span class="h1-ergo">Ergo</span><span class="h1-mixer">Mixer</span><br><span class="h1-on">на</span> <span class="h1-android">Android</span></h1>
+  <p class="subtitle">Запустите миксер локально на телефоне через Termux. Root не нужен, серверов нет.</p>
+</header>
+<div class="section-head"><div class="snum">1</div><div class="stitle">Установить Termux</div></div>
+<div class="card"><div class="card-title">📦 Termux из Play Store или F-Droid</div>
+<div class="card-body"><strong>Termux</strong> из <a href="https://play.google.com/store/apps/details?id=com.termux" target="_blank">Google Play Store</a> или <a href="https://f-droid.org/packages/com.termux/" target="_blank">F-Droid</a>. Оба варианта работают.</div></div>
+<div class="section-head"><div class="snum">2</div><div class="stitle">Запустить установщик</div></div>
+<div class="install-box"><span class="install-label">ВСТАВИТЬ В TERMUX</span>
+<pre id="cmd-ru">curl -fsSL https://raw.githubusercontent.com/moon-miner/ErgoMixer-Android/refs/heads/main/install.sh | bash</pre>
+<button class="install-copy" onclick="copyInstall('cmd-ru',this)">📋 Скопировать команду</button></div>
+<div class="section-head"><div class="snum">3</div><div class="stitle">Включить режим ПК</div></div>
+<div class="card"><div class="card-title">🖥️ Важно: включить версию для ПК в браузере</div>
+<div class="card-body">Интерфейс ErgoMixer рассчитан на десктопные браузеры. В мобильном браузере обязательно включите <strong>режим ПК</strong> — иначе интерфейс будет деформирован.</div></div>
+<div class="step-list">
+  <div class="step"><div class="step-n">1</div><div class="step-content">Откройте меню браузера (<strong>⋮</strong>)</div></div>
+  <div class="step"><div class="step-n">2</div><div class="step-content">Нажмите <strong>«Версия для ПК»</strong></div></div>
+  <div class="step"><div class="step-n">3</div><div class="step-content">Страница перезагрузится и отобразится корректно</div></div>
+</div>
+<div class="notice notice-warn"><div class="notice-icon">⚠️</div><div class="notice-text"><strong>Без режима ПК</strong> интерфейс деформирован. Самая частая проблема у новых пользователей.</div></div>
+<div class="section-head"><div class="snum">4</div><div class="stitle">Запустить миксер</div></div>
+<div class="code-wrap"><div class="code-top"><span class="code-lang">termux</span><button class="copy-btn" onclick="copyCode(this)">копировать</button></div>
+<pre><span class="cmd">mixer</span></pre></div>
+<div class="section-head"><div class="snum">5</div><div class="stitle">Остановить миксер</div></div>
+<div class="card"><div class="card-title">🛑 Три способа остановить</div>
+<div class="card-body"><strong>A — Веб-интерфейс:</strong> Боковое меню (☰) → вниз → <strong>Shutdown</strong>.<br><br>
+<strong>B — Termux:</strong> <strong>Ctrl+C</strong>.<br><br><strong>C — Любая сессия:</strong></div></div>
+<div class="code-wrap"><div class="code-top"><span class="code-lang">termux</span><button class="copy-btn" onclick="copyCode(this)">копировать</button></div>
+<pre><span class="cmd">mixer stop</span>
+<span class="cmd">kill &lt;PID&gt;</span>
+<span class="cmd">kill -9 &lt;PID&gt;</span></pre></div>
+<div class="section-head"><div class="snum">6</div><div class="stitle">Резервная копия</div></div>
+<div class="card"><div class="card-title">🔐 Обязательно сделайте бэкап</div>
+<div class="card-body"><strong>Configuration</strong> → <strong>Backup Database</strong> → скачивается <code>.zip</code>. Храните в надёжном месте. <strong>Без него вы потеряете доступ к средствам.</strong></div></div>
+<div class="summary"><h2>Готово к <em>работе.</em></h2>
+<p>100% локально. Без серверов. Ваши ключи, ваши средства.</p>
+<div class="summary-grid">
+  <div class="sg-item"><div class="sg-label">Запуск</div><div class="sg-val">mixer</div></div>
+  <div class="sg-item"><div class="sg-label">Остановка</div><div class="sg-val">Shutdown (веб)</div></div>
+  <div class="sg-item"><div class="sg-label">URL</div><div class="sg-val">localhost:9000</div></div>
+  <div class="sg-item"><div class="sg-label">Root</div><div class="sg-val">Нет ✗</div></div>
+</div></div>
+</div><!-- /ru -->
+
+<footer>
+  <p>ErgoMixer is open source · <a href="https://github.com/ergoMixer/ergoMixBack" target="_blank">GitHub</a> · <a href="https://github.com/moon-miner/ErgoMixer-Android" target="_blank">Android Scripts</a></p>
+  <p style="margin-top:8px">Community guide — not officially affiliated with the ErgoMixer project.</p>
+  <br>
+</footer>
+
+</div><!-- .wrap -->
+
+<script>
+function setLang(lang, btn) {
+  document.querySelectorAll('.lang-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('lang-' + lang).classList.add('active');
+  btn.classList.add('active');
+  document.documentElement.lang = lang;
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function copyInstall(id, btn) {
+  navigator.clipboard.writeText(document.getElementById(id).textContent.trim()).then(() => {
+    const o = btn.textContent;
+    btn.textContent = '✅ Copied!'; btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = o; btn.classList.remove('ok'); }, 2000);
+  });
+}
+function copyCode(btn) {
+  const text = btn.closest('.code-wrap').querySelector('pre').textContent.trim();
+  navigator.clipboard.writeText(text).then(() => {
+    const o = btn.textContent;
+    btn.textContent = '✓'; btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = o; btn.classList.remove('ok'); }, 1500);
+  });
+}
+</script>
+</body>
+</html>
